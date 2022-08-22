@@ -1,0 +1,36 @@
+node{
+    stages {
+        stage("Env Variables") {
+            steps {
+                echo "The build number is ${env.BUILD_NUMBER}"
+                echo "You can also use \${BUILD_NUMBER} -> ${BUILD_NUMBER}"
+                sh 'echo "I can access $BUILD_NUMBER in shell command as well."'
+            }
+        }
+			
+	   stage('clone code')	{
+		    steps {
+			    git 'https://github.com/jaumendes/hello-worldo.git'
+		    }
+	    }
+		
+	    stage('Build code'){
+		 steps{
+			sh 'mvn clean install'
+			}
+		}
+		 
+	    stage('Deploy code'){
+		  steps{
+		  sshagent(['tomcat']){
+			scp webapp/target/webapp.war jose.mendes@192.168.1.7:/opt/apache-tomcat-8.5.1/webapps/webapp.war
+			}
+	    }
+		}
+		stage ('ReStart Tomcat Server') {
+		  steps{
+			 sleep(5)
+	      }  
+        }
+    }
+}
