@@ -1,0 +1,46 @@
+pipeline{
+    agent any
+    
+    options {
+        timestamps()
+    }
+	tools{
+		maven 'maven_3_5_0'
+		}
+	
+	environment {
+		TOMCAT_EXE_HOME = "/usr/share/tomcat/bin"
+	}
+	stages {
+        stage("Env Variables") {
+            steps {
+                echo "The build number is ${env.BUILD_NUMBER}"
+                echo "You can also use \${BUILD_NUMBER} -> ${BUILD_NUMBER}"
+                sh 'echo "I can access $BUILD_NUMBER in shell command as well."'
+            }
+        }
+			
+	   stage('clone code')	{
+		    steps {
+			    git 'https://github.com/jaumendes/hello-worldo.git'
+		    }
+	    }
+		
+	    stage('Build code'){
+		    steps{
+			  sh 'mvn clean install'
+			}
+		 
+		}
+	    stage('Deploy code'){
+		  steps{
+		    sh 'cp webapp/target/webapp.war /usr/share/tomcat/webapps/webapp.war'
+	    }
+		}
+		stage ('ReStart Tomcat Server') {
+		  steps{
+			 sh '${TOMCAT_EXE_HOME}/shutdown.sh && sleep 5 && ${TOMCAT_EXE_HOME}/startup.sh'
+	      }  
+        }
+    }
+}
